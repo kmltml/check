@@ -30,6 +30,15 @@ object Sandbox {
           Abs("x", Nat, Const("S")),
           Var(1)
         ))))
+    },
+    "*" -> constReducer(0) {
+      case Nil =>
+        Abs("a", Nat, Abs("b", Nat, Const("Nat-rec").app(
+          Nat,
+          nat(0),
+          Abs("x", Nat, Const("+").app(Var(1))),
+          Var(1)
+        )))
     }
   )
 
@@ -38,6 +47,7 @@ object Sandbox {
     "S" -> Pi("n", Nat, Nat),
     "Z" -> Nat,
     "+" -> Pi("a", Nat, Pi("b", Nat, Nat)),
+    "*" -> Pi("a", Nat, Pi("b", Nat, Nat)),
     "Nat-rec" -> Pi("A", Type(0), Pi(
       "a", Var(0), Pi(
         "f", Pi("n", Nat, Pi("b", Var(2), Var(3))), Pi(
@@ -49,5 +59,7 @@ object Sandbox {
 
   def tc(t: Term): Either[String, Term] =
     Typechecker.typecheck(t, Nil, constTypes, consts)
+
+  def normalize(t: Term): String = t.reduce(consts).prettyprint(Nil)
 
 }
