@@ -12,7 +12,7 @@ object Typechecker {
     val names = ctxt.map(_._1)
     t match {
       case Var(i) => Right(ctxt(i)._2.shift(i + 1))
-      case Type(l) => Right(Type(l + 1))
+      case Type => Right(Type)
       case Const(c) => consts.lift(c).toRight(s"Unknown constant: $c")
       case App(f, Nil) => typecheck(f, ctxt, consts, constReds)
       case App(f, as) =>
@@ -38,7 +38,7 @@ object Typechecker {
       case Abs(n, t, b) => for {
         tt <- typecheck(t, ctxt, consts, constReds)
         _ <- tt match {
-          case Type(_) => Right(())
+          case Type => Right(())
           case t => Left(s"Wrong kind of abstraction argument type: ${t.prettyprint(names)}")
         }
         newctxt = (n, t) :: ctxt
@@ -46,17 +46,17 @@ object Typechecker {
       } yield Pi(n, t, bt)
       case Pi(n, t, r) => for {
         tt <- typecheck(t, ctxt, consts, constReds)
-        tl <- tt match {
-          case Type(l) => Right(l)
+        _ <- tt match {
+          case Type => Right(())
           case t => Left(s"Wrong kind of Pi argument type: ${t.prettyprint(names)}")
         }
         newctxt = (n, t) :: ctxt
         rt <- typecheck(r, newctxt, consts, constReds)
-        rl <- rt match {
-          case Type(l) => Right(l)
+        _ <- rt match {
+          case Type => Right(())
           case t => Left(s"Wrong kind of Pi result: ${t.prettyprint(newctxt.map(_._1))}")
         }
-      } yield Type(tl max rl)
+      } yield Type
     }
   }
 

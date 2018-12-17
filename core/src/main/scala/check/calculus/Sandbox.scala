@@ -8,6 +8,9 @@ object Sandbox {
   val Nat = Const("Nat")
   val S = Const("S")
   val Z = Const("Z")
+  val PEq = Const("=")
+  val refl = Const("refl")
+  val id = Const("id")
 
   def constReducer(arity: Int)(f: List[Term] => Term): PartialFunction[List[Term], Term] = {
     case as if as.size == arity =>
@@ -39,19 +42,25 @@ object Sandbox {
           Abs("x", Nat, Const("+").app(Var(1))),
           Var(1)
         )))
+    },
+    "id" -> constReducer(0) {
+      case Nil => lambda(("A", Type), ("x", Var(0)))(Var(0))
     }
   )
 
   val constTypes: Map[String, Term] = Map(
-    "Nat" -> Type(0),
+    "Nat" -> Type,
     "S" -> Pi("n", Nat, Nat),
     "Z" -> Nat,
+    "=" -> Pi("A", Type, Pi("x", Var(0), Pi("y", Var(1), Type))),
+    "refl" -> Pi("A", Type, Pi("x", Var(0), PEq.app(Var(1), Var(0), Var(0)))),
     "+" -> Pi("a", Nat, Pi("b", Nat, Nat)),
     "*" -> Pi("a", Nat, Pi("b", Nat, Nat)),
-    "Nat-rec" -> Pi("A", Type(0), Pi(
+    "Nat-rec" -> Pi("A", Type, Pi(
       "a", Var(0), Pi(
         "f", Pi("n", Nat, Pi("b", Var(2), Var(3))), Pi(
-          "c", Nat, Var(3))))) // ∀ {A : Set} → A → (ℕ → A → A) → ℕ → A
+          "c", Nat, Var(3))))), // ∀ {A : Set} → A → (ℕ → A → A) → ℕ → A
+    "id" -> (("A", Type) ->: ("x", Var(0)) ->: Var(1))
   )
 
   def nat(i: Int): Term =
